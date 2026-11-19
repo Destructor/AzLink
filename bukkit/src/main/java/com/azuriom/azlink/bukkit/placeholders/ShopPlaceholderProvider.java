@@ -2,14 +2,15 @@ package com.azuriom.azlink.bukkit.placeholders;
 
 import com.azuriom.azlink.bukkit.AzLinkBukkitPlugin;
 import com.azuriom.azlink.common.http.client.HttpClient;
+import com.azuriom.azlink.common.scheduler.CancellableTask;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ShopPlaceholderProvider implements PlaceholderProvider {
 
@@ -17,16 +18,15 @@ public class ShopPlaceholderProvider implements PlaceholderProvider {
     private final List<ShopPayment> recentPayments = new ArrayList<>();
     private double goalProgress = 0.0;
     private double goalTotal = 0.0;
-    private BukkitTask refreshTask;
+    private CancellableTask refreshTask;
 
     private final AzLinkBukkitPlugin plugin;
 
     public ShopPlaceholderProvider(AzLinkBukkitPlugin plugin) {
         this.plugin = plugin;
 
-        this.refreshTask = this.plugin.getServer()
-                .getScheduler()
-                .runTaskTimer(plugin, this::refreshData, 1, 5 * 60 * 20); // Run every 5 minutes
+        this.refreshTask = this.plugin.getSchedulerAdapter() // Folia: Bukkit scheduler unsupported
+                .scheduleAsyncRepeating(this::refreshData, 50, 5 * 60 * 1000, TimeUnit.MILLISECONDS); // Run every 5 minutes
     }
 
     @Override

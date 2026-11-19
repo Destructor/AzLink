@@ -2,6 +2,7 @@ package com.azuriom.azlink.bukkit.placeholders;
 
 import com.azuriom.azlink.bukkit.AzLinkBukkitPlugin;
 import com.azuriom.azlink.common.http.client.HttpClient;
+import com.azuriom.azlink.common.scheduler.CancellableTask;
 import com.google.gson.annotations.SerializedName;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -10,12 +11,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class VotePlaceholderProvider implements PlaceholderProvider, Runnable, Listener {
@@ -27,16 +28,15 @@ public class VotePlaceholderProvider implements PlaceholderProvider, Runnable, L
 
     private volatile boolean pendingRefresh = true;
     private volatile Instant lastUpdate = Instant.MIN;
-    private BukkitTask refreshTask;
+    private CancellableTask refreshTask;
 
     private final AzLinkBukkitPlugin plugin;
 
     public VotePlaceholderProvider(AzLinkBukkitPlugin plugin) {
         this.plugin = plugin;
 
-        this.refreshTask = this.plugin.getServer()
-                .getScheduler()
-                .runTaskTimer(plugin, this, 1, 5 * 20);
+        this.refreshTask = this.plugin.getSchedulerAdapter() // Folia: Bukkit scheduler unsupported
+                .scheduleAsyncRepeating(this, 50, 5000, TimeUnit.MILLISECONDS);
 
         this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     }
